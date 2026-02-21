@@ -1,0 +1,49 @@
+<div class="modal-header">
+    <h5 class="modal-title">Paiement #{{ contribution.id }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">Adherent</dt>
+        <dd class="col-sm-8">{{ adherent.get_nom_complet() if adherent else 'Inconnu' }}</dd>
+
+        <dt class="col-sm-4">Montant</dt>
+        <dd class="col-sm-8 fw-bold">{{ contribution.montant|format_montant }}</dd>
+
+        <dt class="col-sm-4">Date de paiement</dt>
+        <dd class="col-sm-8">{{ contribution.date_paiement|format_date }}</dd>
+
+        <dt class="col-sm-4">Type</dt>
+        <dd class="col-sm-8">
+            {% if contribution.type_paiement == 'frais_entree' %}
+                <span class="badge bg-info">Frais d'entree</span>
+            {% else %}
+                <span class="badge bg-primary">Cotisation</span>
+            {% endif %}
+        </dd>
+
+        <dt class="col-sm-4">Mode de paiement</dt>
+        <dd class="col-sm-8">{{ contribution.mode_paiement or '-' }}</dd>
+
+        <dt class="col-sm-4">Reference</dt>
+        <dd class="col-sm-8">{{ contribution.reference_paiement or '-' }}</dd>
+
+        <dt class="col-sm-4">Admin</dt>
+        <dd class="col-sm-8">{{ contribution.admin_id|admin_name or '-' }}</dd>
+
+        {% if contribution.notes %}
+        <dt class="col-sm-4">Notes</dt>
+        <dd class="col-sm-8">{{ contribution.notes }}</dd>
+        {% endif %}
+
+        <dt class="col-sm-4">Enregistre le</dt>
+        <dd class="col-sm-8">{{ contribution.created_at or '-' }}</dd>
+    </dl>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-danger btn-sm"
+            onclick="confirmDelete('{{ url_for('contributions.supprimer', id=contribution.id) }}', 'Supprimer ce paiement ?')">
+        <i class="bi bi-trash"></i> Supprimer
+    </button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+</div>

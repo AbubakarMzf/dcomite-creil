@@ -1,0 +1,125 @@
+<form method="POST" action="{{ action_url }}">
+    <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="row g-3">
+            <!-- Choix adherent -->
+            <div class="col-12">
+                <label class="form-label">Adherent <span class="text-danger">*</span></label>
+                <select name="adherent_id" id="selectAdherent" class="form-select" required>
+                    <option value="">-- Choisir un adherent --</option>
+                    {% for a in adherents %}
+                        <option value="{{ a.id }}">{{ a.get_nom_complet() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Zone cotisations (chargee en AJAX) -->
+            <div class="col-12" id="zoneCotisations" style="display:none;">
+                <label class="form-label">Cotisation a payer</label>
+                <select name="cotisation_id" id="selectCotisation" class="form-select">
+                    <option value="">-- Paiement libre (sans cotisation) --</option>
+                </select>
+                <input type="hidden" name="type_paiement" id="typePaiement" value="cotisation">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Montant ({{ CURRENCY_SYMBOL }}) <span class="text-danger">*</span></label>
+                <input type="number" name="montant" id="inputMontant" class="form-control" step="0.01" min="0.01" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Date de paiement <span class="text-danger">*</span></label>
+                <input type="date" name="date_paiement" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Mode de paiement</label>
+                <select name="mode_paiement" class="form-select">
+                    <option value="">-- Choisir --</option>
+                    {% for mode in PAYMENT_MODES %}
+                        <option value="{{ mode }}">{{ mode }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Admin</label>
+                <select name="admin_id" class="form-select">
+                    <option value="">-- Choisir --</option>
+                    {% for id, name in ADMIN_IDS.items() %}
+                        <option value="{{ id }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Reference</label>
+                <input type="text" name="reference_paiement" class="form-control">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Notes</label>
+                <textarea name="notes" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> Enregistrer
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+    </div>
+</form>
+
+<script>
+document.getElementById('selectAdherent').addEventListener('change', function() {
+    var adherentId = this.value;
+    var zone = document.getElementById('zoneCotisations');
+    var select = document.getElementById('selectCotisation');
+    var typePaiement = document.getElementById('typePaiement');
+    var inputMontant = document.getElementById('inputMontant');
+
+    if (!adherentId) {
+        zone.style.display = 'none';
+        return;
+    }
+
+    fetch('{{ url_for("contributions.index") }}api/cotisations/' + adherentId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            select.innerHTML = '<option value="">-- Paiement libre (sans cotisation) --</option>';
+
+            if (data.frais_impaye) {
+                var opt = document.createElement('option');
+                opt.value = 'frais_entree';
+                opt.textContent = 'Frais d\'entree - ' + data.frais_montant + ' {{ CURRENCY_SYMBOL }}';
+                opt.dataset.montant = data.frais_montant;
+                select.appendChild(opt);
+            }
+
+            data.cotisations.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.appel_info + ' - Reste: ' + c.reste + ' {{ CURRENCY_SYMBOL }}';
+                opt.dataset.montant = c.reste;
+                select.appendChild(opt);
+            });
+
+            zone.style.display = (data.cotisations.length > 0 || data.frais_impaye) ? 'block' : 'none';
+        });
+});
+
+document.getElementById('selectCotisation').addEventListener('change', function() {
+    var typePaiement = document.getElementById('typePaiement');
+    var inputMontant = document.getElementById('inputMontant');
+    var selected = this.options[this.selectedIndex];
+
+    if (this.value === 'frais_entree') {
+        typePaiement.value = 'frais_entree';
+    } else {
+        typePaiement.value = 'cotisation';
+    }
+
+    if (selected && selected.dataset.montant) {
+        inputMontant.value = selected.dataset.montant;
+    }
+});
+</script>

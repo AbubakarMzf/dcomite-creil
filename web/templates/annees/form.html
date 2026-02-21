@@ -1,0 +1,21 @@
+<form method="POST" action="{{ action_url }}">
+    <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label">Annee <span class="text-danger">*</span></label>
+                <input type="number" name="annee" class="form-control"
+                       min="2000" max="2100" required>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> Creer
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+    </div>
+</form>

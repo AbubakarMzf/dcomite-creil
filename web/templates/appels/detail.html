@@ -1,0 +1,114 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        Appel {{ appel.annee }}
+        {% if appel.cloture %}
+            <span class="badge bg-secondary ms-2">Cloture</span>
+        {% else %}
+            <span class="badge bg-primary ms-2">Ouvert</span>
+        {% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <!-- Info appel -->
+    <dl class="row mb-3">
+        <dt class="col-sm-5">Montant par adherent</dt>
+        <dd class="col-sm-7 fw-bold">{{ appel.montant|format_montant }}</dd>
+
+        <dt class="col-sm-5">Date de lancement</dt>
+        <dd class="col-sm-7">{{ appel.date_lancement|format_date }}</dd>
+
+        {% if appel.description %}
+        <dt class="col-sm-5">Description</dt>
+        <dd class="col-sm-7">{{ appel.description }}</dd>
+        {% endif %}
+
+        <dt class="col-sm-5">Admin</dt>
+        <dd class="col-sm-7">{{ appel.admin_id|admin_name or '-' }}</dd>
+    </dl>
+
+    <!-- Stats -->
+    <div class="row g-2 mb-3">
+        <div class="col-4">
+            <div class="border rounded p-2 text-center">
+                <div class="text-success fw-bold fs-5">{{ stats.nb_paye }}</div>
+                <small class="text-muted">Payes</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="border rounded p-2 text-center">
+                <div class="text-warning fw-bold fs-5">{{ stats.nb_partiel }}</div>
+                <small class="text-muted">Partiels</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="border rounded p-2 text-center">
+                <div class="text-danger fw-bold fs-5">{{ stats.nb_non_paye }}</div>
+                <small class="text-muted">Impayes</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-flex justify-content-between mb-1">
+            <span>Collecte : {{ stats.total_collecte|format_montant }}</span>
+            <span>Attendu : {{ stats.total_attendu|format_montant }}</span>
+        </div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar {% if stats.taux < 25 %}bg-danger{% elif stats.taux < 50 %}bg-warning{% elif stats.taux < 75 %}bg-info{% else %}bg-success{% endif %}"
+                 style="width: {{ [stats.taux, 100]|min }}%">
+                {{ "%.1f"|format(stats.taux) }}%
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau cotisations -->
+    <h6 class="border-bottom pb-2 mb-2">Cotisations ({{ cotisations|length }})</h6>
+    {% if cotisations %}
+    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+        <table class="table table-sm table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Adherent</th>
+                    <th>Du</th>
+                    <th>Paye</th>
+                    <th>Reste</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cotisations %}
+                <tr>
+                    <td>{{ c.nom if c.nom is defined else '' }} {{ c.prenom if c.prenom is defined else '' }}</td>
+                    <td>{{ c.montant_du|format_montant }}</td>
+                    <td>{{ c.montant_paye|format_montant }}</td>
+                    <td>{{ c.get_reste_a_payer()|format_montant }}</td>
+                    <td>
+                        {% if c.statut == 'paye' %}
+                            <span class="badge bg-success">Paye</span>
+                        {% elif c.statut == 'partiel' %}
+                            <span class="badge bg-warning text-dark">Partiel</span>
+                        {% else %}
+                            <span class="badge bg-danger">Impaye</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Aucune cotisation.</p>
+    {% endif %}
+</div>
+<div class="modal-footer">
+    {% if not appel.cloture %}
+    <form method="POST" action="{{ url_for('appels.cloturer', id=appel.id) }}" class="d-inline">
+        <button type="submit" class="btn btn-warning btn-sm"
+                onclick="return confirm('Cloturer cet appel ?')">
+            <i class="bi bi-lock"></i> Cloturer
+        </button>
+    </form>
+    {% endif %}
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+</div>

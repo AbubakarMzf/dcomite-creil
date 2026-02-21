@@ -1,0 +1,51 @@
+<form method="POST" action="{{ action_url }}">
+    <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Annee <span class="text-danger">*</span></label>
+                <input type="number" name="annee" class="form-control"
+                       min="2000" max="2100" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Montant par adherent ({{ CURRENCY_SYMBOL }}) <span class="text-danger">*</span></label>
+                <input type="number" name="montant" class="form-control"
+                       step="0.01" min="0.01" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Date de lancement</label>
+                <input type="date" name="date_lancement" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Admin</label>
+                <select name="admin_id" class="form-select">
+                    <option value="">-- Choisir --</option>
+                    {% for id, name in ADMIN_IDS.items() %}
+                        <option value="{{ id }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="2"
+                          placeholder="Ex: Cotisation annuelle 2025, Appel urgence..."></textarea>
+            </div>
+            <div class="col-12">
+                <div class="alert alert-info py-2 mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>{{ nb_adherents }}</strong> adherent(s) actif(s) seront concernes par cet appel.
+                    Une cotisation sera automatiquement creee pour chacun.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-megaphone"></i> Lancer l'appel
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+    </div>
+</form>

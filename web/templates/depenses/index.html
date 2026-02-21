@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Depenses - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestion des depenses</h2>
+    <button class="btn btn-success" onclick="loadModal('{{ url_for('depenses.form_nouveau') }}')">
+        <i class="bi bi-plus-lg"></i> Nouvelle depense
+    </button>
+</div>
+
+{% if not annee_active %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        Aucune annee active. Veuillez activer une annee dans la section
+        <a href="{{ url_for('annees.index') }}">Annees</a>.
+    </div>
+{% else %}
+
+<!-- Barre de recherche -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <input type="text" id="tableSearch" class="form-control form-control-sm"
+                       placeholder="Rechercher par nom, montant, date...">
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="text-muted"><span id="rowCount">{{ depenses|length }}</span> depense(s)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0" id="dataTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Defunt</th>
+                    <th>Adherent</th>
+                    <th>Date deces</th>
+                    <th>Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in depenses %}
+                <tr class="clickable-row" data-detail-url="{{ url_for('depenses.detail', id=item.depense.id) }}">
+                    <td>{{ item.depense.id }}</td>
+                    <td>{{ item.defunt_nom }}</td>
+                    <td>{{ item.adherent_nom }}</td>
+                    <td>{{ item.depense.date_deces|format_date }}</td>
+                    <td>{{ item.depense.montant|format_montant }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-muted text-center py-3">Aucune depense enregistree</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

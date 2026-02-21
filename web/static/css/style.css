@@ -1,0 +1,129 @@
+/* ========== Sidebar ========== */
+.sidebar {
+    background-color: #2C3E50;
+    width: 250px;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 12px 20px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: rgba(52, 152, 219, 0.3);
+    border-left-color: #3498DB;
+}
+
+.sidebar .nav-link i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+/* ========== Main Content ========== */
+.main-content {
+    margin-left: 250px;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+/* ========== Stat Cards ========== */
+.stat-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card .card-accent {
+    height: 5px;
+    border-radius: 8px 8px 0 0;
+}
+
+.stat-card .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2C3E50;
+}
+
+.stat-card .stat-label {
+    color: #7F8C8D;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========== Tables ========== */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.clickable-row:hover {
+    background-color: #EBF5FB !important;
+}
+
+.table thead th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========== Search ========== */
+.hidden-row {
+    display: none;
+}
+
+/* ========== Badges ========== */
+.badge-actif {
+    background-color: #27AE60;
+}
+
+.badge-inactif {
+    background-color: #95A5A6;
+}
+
+/* ========== Alerts Dashboard ========== */
+.alert-section .alert {
+    margin-bottom: 0.5rem;
+}
+
+/* ========== Modal ========== */
+.modal-content {
+    border: none;
+    border-radius: 8px;
+}
+
+/* ========== Progress bar ========== */
+.progress {
+    height: 24px;
+    border-radius: 12px;
+}
+
+.progress-bar {
+    border-radius: 12px;
+    font-weight: 600;
+}

@@ -1,0 +1,43 @@
+<div class="modal-header">
+    <h5 class="modal-title">
+        Annee {{ annee.annee }}
+        {% if annee.active %}
+            <span class="badge bg-success ms-2">Active</span>
+        {% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-5">Annee</dt>
+        <dd class="col-sm-7 fw-bold">{{ annee.annee }}</dd>
+
+        <dt class="col-sm-5">Statut</dt>
+        <dd class="col-sm-7">
+            {% if annee.active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+        </dd>
+
+        <dt class="col-sm-5">Total depenses</dt>
+        <dd class="col-sm-7 text-danger fw-bold">{{ total_depenses|format_montant }}</dd>
+
+        <dt class="col-sm-5">Nombre de deces</dt>
+        <dd class="col-sm-7">{{ nb_depenses }}</dd>
+
+        <dt class="col-sm-5">Cree le</dt>
+        <dd class="col-sm-7">{{ annee.created_at or '-' }}</dd>
+    </dl>
+</div>
+<div class="modal-footer">
+    {% if not annee.active %}
+    <form method="POST" action="{{ url_for('annees.activer', id=annee.id) }}" class="d-inline">
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-check-circle"></i> Activer cette annee
+        </button>
+    </form>
+    {% endif %}
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+</div>

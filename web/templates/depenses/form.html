@@ -1,0 +1,102 @@
+<form method="POST" action="{{ action_url }}">
+    <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+        <!-- Section 1 : Informations du deces -->
+        <h6 class="border-bottom pb-2 mb-3">Informations du deces</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <label class="form-label">Adherent concerne <span class="text-danger">*</span></label>
+                <select name="adherent_id" class="form-select" required>
+                    <option value="">-- Choisir un adherent --</option>
+                    {% for a in adherents %}
+                        <option value="{{ a.id }}">{{ a.get_nom_complet() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label d-block">Le defunt est :</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="defunt_est_adherent"
+                           id="defuntAdherent" value="1" checked
+                           onchange="document.getElementById('blocProche').style.display='none'">
+                    <label class="form-check-label" for="defuntAdherent">L'adherent lui-meme</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="defunt_est_adherent"
+                           id="defuntProche" value="0"
+                           onchange="document.getElementById('blocProche').style.display='flex'">
+                    <label class="form-check-label" for="defuntProche">Un proche de l'adherent</label>
+                </div>
+            </div>
+            <div class="col-12 row g-3" id="blocProche" style="display: none;">
+                <div class="col-md-6">
+                    <label class="form-label">Nom du defunt</label>
+                    <input type="text" name="defunt_nom" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Relation</label>
+                    <select name="defunt_relation" class="form-select">
+                        <option value="">-- Choisir --</option>
+                        {% for rel in RELATIONS %}
+                            <option value="{{ rel }}">{{ rel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Date de deces <span class="text-danger">*</span></label>
+                <input type="date" name="date_deces" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Pays de destination</label>
+                <input type="text" name="pays_destination" class="form-control">
+            </div>
+        </div>
+
+        <!-- Section 2 : Ventilation des couts -->
+        <h6 class="border-bottom pb-2 mb-3">Ventilation des couts</h6>
+        <div class="row g-3">
+            {% for key, label in POSTES_DEPENSES.items() %}
+            <div class="col-md-6">
+                <label class="form-label">{{ label }}</label>
+                <input type="number" name="{{ key }}" class="form-control cost-input"
+                       step="0.01" min="0" value="0">
+            </div>
+            {% endfor %}
+            <div class="col-12">
+                <div class="alert alert-info py-2 mb-0">
+                    <strong>Total : <span id="totalCost">0</span> {{ CURRENCY_SYMBOL }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> Enregistrer
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+    </div>
+</form>
+
+<script>
+// Calcul du total en temps reel
+document.querySelectorAll('.cost-input').forEach(function(input) {
+    input.addEventListener('input', updateTotal);
+});
+
+function updateTotal() {
+    var total = 0;
+    document.querySelectorAll('.cost-input').forEach(function(input) {
+        total += parseFloat(input.value) || 0;
+    });
+    document.getElementById('totalCost').textContent = total.toLocaleString('fr-FR');
+}
+</script>

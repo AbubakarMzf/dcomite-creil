@@ -1,0 +1,70 @@
+<div class="modal-header">
+    <h5 class="modal-title">Depense #{{ depense.id }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <!-- Informations deces -->
+    <h6 class="border-bottom pb-2 mb-3">Informations du deces</h6>
+    <dl class="row mb-3">
+        <dt class="col-sm-4">Adherent</dt>
+        <dd class="col-sm-8">{{ adherent.get_nom_complet() if adherent else 'Inconnu' }}</dd>
+
+        <dt class="col-sm-4">Defunt</dt>
+        <dd class="col-sm-8">
+            {{ depense.get_nom_defunt() }}
+            {% if not depense.defunt_est_adherent and depense.defunt_relation %}
+                <small class="text-muted">({{ depense.defunt_relation }})</small>
+            {% endif %}
+        </dd>
+
+        <dt class="col-sm-4">Type</dt>
+        <dd class="col-sm-8">
+            {% if depense.defunt_est_adherent %}
+                <span class="badge bg-danger">Adherent decede</span>
+            {% else %}
+                <span class="badge bg-info">Proche d'un adherent</span>
+            {% endif %}
+        </dd>
+
+        <dt class="col-sm-4">Date de deces</dt>
+        <dd class="col-sm-8">{{ depense.date_deces|format_date }}</dd>
+
+        {% if depense.pays_destination %}
+        <dt class="col-sm-4">Pays destination</dt>
+        <dd class="col-sm-8">{{ depense.pays_destination }}</dd>
+        {% endif %}
+    </dl>
+
+    <!-- Ventilation des couts -->
+    <h6 class="border-bottom pb-2 mb-3">Ventilation des couts</h6>
+    <table class="table table-sm">
+        <tbody>
+            {% for key, label in POSTES_DEPENSES.items() %}
+            {% set val = depense.__dict__.get(key, 0) %}
+            {% if val and val > 0 %}
+            <tr>
+                <td>{{ label }}</td>
+                <td class="text-end">{{ val|format_montant }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="fw-bold">
+                <td>Total</td>
+                <td class="text-end">{{ depense.montant|format_montant }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if depense.notes %}
+    <p class="text-muted"><strong>Notes :</strong> {{ depense.notes }}</p>
+    {% endif %}
+</div>
+<div class="modal-footer">
+    <button class="btn btn-danger btn-sm"
+            onclick="confirmDelete('{{ url_for('depenses.supprimer', id=depense.id) }}', 'Supprimer cette depense ?')">
+        <i class="bi bi-trash"></i> Supprimer
+    </button>
+    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+</div>

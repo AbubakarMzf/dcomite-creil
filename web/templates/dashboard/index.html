@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Tableau de bord</h2>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-2">
+        <div class="card stat-card">
+            <div class="card-accent" style="background-color: #3498DB;"></div>
+            <div class="card-body text-center p-3">
+                <div class="stat-label">Adherents actifs</div>
+                <div class="stat-value">{{ stats.nb_adherents_actifs }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stat-card">
+            <div class="card-accent" style="background-color: #9B59B6;"></div>
+            <div class="card-body text-center p-3">
+                <div class="stat-label">Appels ouverts</div>
+                <div class="stat-value">{{ stats.nb_appels_ouverts }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stat-card">
+            <div class="card-accent" style="background-color: #27AE60;"></div>
+            <div class="card-body text-center p-3">
+                <div class="stat-label">Total collecte</div>
+                <div class="stat-value">{{ stats.total_collecte|format_montant }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stat-card">
+            <div class="card-accent" style="background-color: #E74C3C;"></div>
+            <div class="card-body text-center p-3">
+                <div class="stat-label">Total depenses</div>
+                <div class="stat-value">{{ stats.total_depenses|format_montant }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stat-card">
+            <div class="card-accent" style="background-color: #F39C12;"></div>
+            <div class="card-body text-center p-3">
+                <div class="stat-label">Balance</div>
+                <div class="stat-value {% if stats.balance_globale < 0 %}text-danger{% endif %}">
+                    {{ stats.balance_globale|format_montant }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card stat-card">
+            <div class="card-accent" style="background-color: #16A085;"></div>
+            <div class="card-body text-center p-3">
+                <div class="stat-label">Recouvrement</div>
+                <div class="stat-value">{{ "%.1f"|format(stats.taux_recouvrement) }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar recouvrement global -->
+{% if stats.total_attendu > 0 %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+            <span>Collecte : {{ stats.total_collecte|format_montant }}</span>
+            <span>Attendu : {{ stats.total_attendu|format_montant }}</span>
+        </div>
+        {% set pct = stats.taux_recouvrement %}
+        {% set pct_display = [pct, 100] | min %}
+        {% set pct_display = [pct_display, 0] | max %}
+        <div class="progress">
+            <div class="progress-bar {% if pct < 25 %}bg-danger{% elif pct < 50 %}bg-warning{% elif pct < 75 %}bg-info{% else %}bg-success{% endif %}"
+                 role="progressbar"
+                 style="width: {{ pct_display }}%">
+                {{ "%.0f"|format(pct) }}%
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Alertes -->
+{% if alertes and alertes.alertes %}
+<div class="alert-section mb-4">
+    {% for alerte in alertes.alertes %}
+        <div class="alert alert-{% if alerte.niveau == 'critique' %}danger{% elif alerte.niveau == 'warning' %}warning{% else %}info{% endif %} py-2">
+            <i class="bi bi-{% if alerte.niveau == 'critique' %}exclamation-octagon{% elif alerte.niveau == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            {{ alerte.message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Activite recente -->
+<div class="row g-4">
+    <!-- Dernieres contributions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-cash-stack text-success"></i> Derniers paiements</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Adherent</th>
+                            <th>Montant</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in dernieres_contributions %}
+                        <tr class="clickable-row" data-detail-url="{{ url_for('contributions.detail', id=c.id) }}">
+                            <td>{{ c.adherent_nom }}</td>
+                            <td>{{ c.montant|format_montant }}</td>
+                            <td>{{ c.date_paiement|format_date }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-muted text-center py-3">Aucun paiement</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dernieres depenses -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-journal-minus text-danger"></i> Dernieres depenses</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Defunt</th>
+                            <th>Montant</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in dernieres_depenses %}
+                        <tr class="clickable-row" data-detail-url="{{ url_for('depenses.detail', id=d.id) }}">
+                            <td>{{ d.defunt_nom }}</td>
+                            <td>{{ d.montant|format_montant }}</td>
+                            <td>{{ d.date_deces|format_date }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-muted text-center py-3">Aucune depense</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

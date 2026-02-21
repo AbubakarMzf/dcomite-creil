@@ -1,0 +1,55 @@
+<nav class="sidebar d-flex flex-column">
+    <div class="sidebar-header p-3 mb-2">
+        <h5 class="text-white mb-1">{{ APP_NAME }}</h5>
+        <small class="text-light opacity-75">
+            {% if annee_active %}
+                Annee {{ annee_active.annee }}
+            {% else %}
+                Aucune annee active
+            {% endif %}
+        </small>
+    </div>
+
+    <ul class="nav flex-column flex-grow-1">
+        <li class="nav-item">
+            <a class="nav-link {% if active_section == 'dashboard' %}active{% endif %}"
+               href="{{ url_for('dashboard.index') }}">
+                <i class="bi bi-speedometer2"></i> Tableau de bord
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_section == 'adherents' %}active{% endif %}"
+               href="{{ url_for('adherents.index') }}">
+                <i class="bi bi-people"></i> Adherents
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_section == 'appels' %}active{% endif %}"
+               href="{{ url_for('appels.index') }}">
+                <i class="bi bi-megaphone"></i> Appels de fonds
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_section == 'paiements' %}active{% endif %}"
+               href="{{ url_for('contributions.index') }}">
+                <i class="bi bi-cash-stack"></i> Paiements
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_section == 'depenses' %}active{% endif %}"
+               href="{{ url_for('depenses.index') }}">
+                <i class="bi bi-journal-minus"></i> Depenses
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_section == 'annees' %}active{% endif %}"
+               href="{{ url_for('annees.index') }}">
+                <i class="bi bi-calendar3"></i> Annees
+            </a>
+        </li>
+    </ul>
+
+    <div class="p-3 text-center">
+        <small class="text-light opacity-50">v{{ APP_VERSION }}</small>
+    </div>
+</nav>
