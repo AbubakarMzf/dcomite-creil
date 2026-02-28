@@ -4,9 +4,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Gestion des paiements</h2>
-    <button class="btn btn-success" onclick="loadModal('{{ url_for('contributions.form_nouveau') }}')">
-        <i class="bi bi-plus-lg"></i> Nouveau paiement
-    </button>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('contributions.impayes') }}" class="btn btn-danger">
+            <i class="bi bi-exclamation-triangle"></i> Liste des impayes
+        </a>
+        <button class="btn btn-success" onclick="loadModal('{{ url_for('contributions.form_nouveau') }}')">
+            <i class="bi bi-plus-lg"></i> Nouveau paiement
+        </button>
+    </div>
 </div>
 
 <!-- Barre de recherche -->

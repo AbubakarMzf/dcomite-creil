@@ -77,6 +77,25 @@ class Annee:
         row = db.fetch_one(query, (self.id,))
         return row['nombre'] if row else 0
 
+    def get_balance_actuelle(self):
+        """Balance de l'annee = total cotisations collectees - total depenses"""
+        db = DatabaseManager()
+        row_collecte = db.fetch_one("""
+            SELECT COALESCE(SUM(c.montant_paye), 0) as total
+            FROM cotisations c
+            JOIN appels_de_fonds a ON c.appel_id = a.id
+            WHERE a.annee = ?
+        """, (self.annee,))
+        total_collecte = row_collecte['total'] if row_collecte else 0
+
+        row_depenses = db.fetch_one(
+            "SELECT COALESCE(SUM(montant), 0) as total FROM depenses WHERE annee_id = ?",
+            (self.id,)
+        )
+        total_depenses = row_depenses['total'] if row_depenses else 0
+
+        return total_collecte - total_depenses
+
     @staticmethod
     def _from_row(row):
         return Annee(

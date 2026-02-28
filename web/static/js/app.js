@@ -15,6 +15,12 @@ async function loadModal(url) {
     try {
         var response = await fetch(url);
         container.innerHTML = await response.text();
+        // innerHTML ne execute pas les balises <script> — les relancer manuellement
+        container.querySelectorAll('script').forEach(function (oldScript) {
+            var newScript = document.createElement('script');
+            newScript.textContent = oldScript.textContent;
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
     } catch (err) {
         container.innerHTML = '<div class="modal-body"><div class="alert alert-danger">Erreur de chargement</div></div>';
     }

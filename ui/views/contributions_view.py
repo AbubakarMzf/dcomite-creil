@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from models.adherent import Adherent
 from models.contribution import Contribution
+from models.cotisation import Cotisation
 from ui.components.paiement_form import PaiementForm
 from database.db_manager import DatabaseManager
 from datetime import datetime
@@ -161,6 +162,18 @@ class ContributionsView(tk.Frame):
             command=self.on_voir_historique
         )
         btn_historique.pack(side=tk.LEFT, padx=5)
+
+        btn_impayes = tk.Button(
+            buttons_frame,
+            text="Liste des impayes",
+            font=("Arial", 10),
+            bg='#E74C3C',
+            fg='white',
+            padx=15,
+            pady=10,
+            command=self.on_voir_impayes
+        )
+        btn_impayes.pack(side=tk.LEFT, padx=5)
 
         # Label compteur
         self.count_label = tk.Label(
@@ -389,3 +402,112 @@ class ContributionsView(tk.Frame):
         text.insert(tk.END, f"TOTAL: {total:,.0f} {CURRENCY_SYMBOL}\n".replace(',', ' '))
 
         text.config(state=tk.DISABLED)
+
+    def on_voir_impayes(self):
+        """Affiche la liste des adherents avec des cotisations impayees"""
+        try:
+            db = DatabaseManager()
+            query = """
+                SELECT a.id, a.nom, a.prenom,
+                       COUNT(c.id) as nb_impayees,
+                       COALESCE(SUM(c.montant_du - c.montant_paye), 0) as montant_restant
+                FROM adherents a
+                JOIN cotisations c ON c.adherent_id = a.id
+                WHERE c.statut != 'paye'
+                GROUP BY a.id, a.nom, a.prenom
+                ORDER BY a.nom, a.prenom
+            """
+            rows = db.fetch_all(query)
+
+            if not rows:
+                messagebox.showinfo("Impayes", "Aucun adherent avec cotisation impayee.")
+                return
+
+            lignes = [dict(row) for row in rows]
+
+            # Fenetre de liste
+            dialog = tk.Toplevel(self)
+            dialog.title("Adherents avec cotisations impayees")
+            dialog.geometry("700x450")
+            dialog.transient(self)
+
+            tk.Label(
+                dialog,
+                text="Adherents avec cotisations impayees",
+                font=("Arial", 13, "bold"),
+                bg='white'
+            ).pack(fill=tk.X, pady=(10, 5), padx=10)
+
+            # Tableau
+            tree_frame = tk.Frame(dialog)
+            tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+            vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+            cols = ('nom', 'prenom', 'nb_impayees', 'montant_restant')
+            tree = ttk.Treeview(
+                tree_frame, columns=cols, show='headings', yscrollcommand=vsb.set
+            )
+            vsb.config(command=tree.yview)
+
+            tree.heading('nom', text='Nom')
+            tree.heading('prenom', text='Prenom')
+            tree.heading('nb_impayees', text='Cotisations impayees')
+            tree.heading('montant_restant', text='Montant restant')
+
+            tree.column('nom', width=180)
+            tree.column('prenom', width=180)
+            tree.column('nb_impayees', width=140, anchor=tk.CENTER)
+            tree.column('montant_restant', width=150, anchor=tk.E)
+
+            tree.tag_configure('oddrow', background='#F8F9FA')
+            tree.tag_configure('evenrow', background='white')
+
+            for i, ligne in enumerate(lignes):
+                tag = 'evenrow' if i % 2 == 0 else 'oddrow'
+                tree.insert('', tk.END, tags=(tag,), values=(
+                    ligne['nom'],
+                    ligne['prenom'],
+                    ligne['nb_impayees'],
+                    f"{ligne['montant_restant']:,.0f} {CURRENCY_SYMBOL}".replace(',', ' ')
+                ))
+
+            tree.grid(row=0, column=0, sticky='nsew')
+            vsb.grid(row=0, column=1, sticky='ns')
+            tree_frame.grid_rowconfigure(0, weight=1)
+            tree_frame.grid_columnconfigure(0, weight=1)
+
+            # Total bas de page
+            total = sum(l['montant_restant'] for l in lignes)
+            tk.Label(
+                dialog,
+                text=f"{len(lignes)} adherent(s)  |  Total restant: {total:,.0f} {CURRENCY_SYMBOL}".replace(',', ' '),
+                font=("Arial", 10, "bold"),
+                fg='#E74C3C'
+            ).pack(pady=5)
+
+            # Bouton export PDF
+            btn_frame = tk.Frame(dialog)
+            btn_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+
+            def exporter_pdf():
+                try:
+                    from services.pdf_service import PdfService
+                    chemin = PdfService.generer_pdf_impayes(lignes)
+                    messagebox.showinfo("PDF", f"PDF genere:\n{chemin}")
+                except Exception as e:
+                    messagebox.showerror("Erreur PDF", str(e))
+
+            tk.Button(
+                btn_frame, text="Exporter en PDF",
+                font=("Arial", 10, "bold"), bg='#E74C3C', fg='white',
+                padx=15, pady=8, command=exporter_pdf
+            ).pack(side=tk.LEFT)
+
+            tk.Button(
+                btn_frame, text="Fermer",
+                font=("Arial", 10), bg='#95A5A6', fg='white',
+                padx=15, pady=8, command=dialog.destroy
+            ).pack(side=tk.RIGHT)
+
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors du chargement:\n{str(e)}")

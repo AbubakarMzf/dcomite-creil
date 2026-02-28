@@ -325,3 +325,77 @@ class PdfService:
         doc.build(elements)
 
         return chemin
+
+    @staticmethod
+    def generer_pdf_impayes(lignes):
+        """
+        Genere un PDF listant les adherents avec des cotisations impayees.
+
+        Args:
+            lignes: liste de dict avec cles 'nom', 'prenom', 'nb_impayees', 'montant_restant'
+
+        Returns:
+            Chemin du fichier PDF genere
+        """
+        dossier = os.path.join(PDF_OUTPUT_DIR, 'rapports')
+        os.makedirs(dossier, exist_ok=True)
+
+        date_jour = datetime.now().strftime('%d-%m-%Y')
+        nom_fichier = f"impayes_{date_jour}.pdf"
+        chemin = PdfService._chemin_unique(os.path.join(dossier, nom_fichier))
+
+        doc = SimpleDocTemplate(
+            chemin,
+            pagesize=A4,
+            rightMargin=2 * cm,
+            leftMargin=2 * cm,
+            topMargin=2 * cm,
+            bottomMargin=2 * cm
+        )
+
+        styles = PdfService._get_styles()
+        elements = []
+
+        elements.append(Paragraph("Liste des adherents avec cotisations impayees", styles['TitrePrincipal']))
+        elements.append(Paragraph(
+            f"Genere le {datetime.now().strftime('%d/%m/%Y a %H:%M')}",
+            styles['PiedPage']
+        ))
+        elements.append(Spacer(1, 0.5 * cm))
+
+        if not lignes:
+            elements.append(Paragraph("Aucun adherent avec cotisation impayee.", styles['Info']))
+        else:
+            donnees = [["Nom", "Prenom", "Nb impayes", "Montant restant"]]
+            total_restant = 0
+            for ligne in lignes:
+                montant = ligne.get('montant_restant', 0)
+                total_restant += montant
+                donnees.append([
+                    ligne.get('nom', ''),
+                    ligne.get('prenom', ''),
+                    str(ligne.get('nb_impayees', 0)),
+                    PdfService._formater_montant(montant)
+                ])
+            donnees.append(["", "TOTAL", "", PdfService._formater_montant(total_restant)])
+
+            table = Table(donnees, colWidths=[4 * cm, 4 * cm, 4 * cm, 5 * cm])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2C3E50')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('ALIGN', (2, 0), (3, -1), 'CENTER'),
+                ('ALIGN', (3, 1), (3, -1), 'RIGHT'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                *[('BACKGROUND', (0, i), (-1, i), colors.HexColor('#F2F3F4'))
+                  for i in range(2, len(donnees) - 1, 2)],
+                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#ECF0F1')),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#BDC3C7')),
+            ]))
+            elements.append(table)
+
+        doc.build(elements)
+        return chemin

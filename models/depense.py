@@ -82,12 +82,6 @@ class Depense:
             if adherent and adherent.actif:
                 adherent.update(actif=0, date_sortie=date_deces)
 
-        # Recalculer la balance de l'annee
-        from models.annee import Annee
-        annee = Annee.get_by_id(annee_id)
-        if annee:
-            annee.recalculer_balance()
-
         return Depense.get_by_id(depense_id)
 
     @staticmethod
@@ -159,28 +153,12 @@ class Depense:
         query = f"UPDATE depenses SET {', '.join(updates)} WHERE id = ?"
 
         db.execute_query(query, params)
-
-        # Recalculer la balance si le montant a change
-        if 'montant' in kwargs or any(p in kwargs for p in Depense.POSTES):
-            from models.annee import Annee
-            annee = Annee.get_by_id(self.annee_id)
-            if annee:
-                annee.recalculer_balance()
-
         return True
 
     def delete(self):
         """Supprime la depense"""
         db = DatabaseManager()
-        query = "DELETE FROM depenses WHERE id = ?"
-        db.execute_query(query, (self.id,))
-
-        # Recalculer la balance
-        from models.annee import Annee
-        annee = Annee.get_by_id(self.annee_id)
-        if annee:
-            annee.recalculer_balance()
-
+        db.execute_query("DELETE FROM depenses WHERE id = ?", (self.id,))
         return True
 
     def get_adherent(self):

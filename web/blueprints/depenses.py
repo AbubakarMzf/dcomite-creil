@@ -81,7 +81,7 @@ def creer():
         except ValueError:
             return 0
 
-    Depense.create(
+    depense = Depense.create(
         annee_id=annee_active.id,
         adherent_id=int(adherent_id),
         defunt_est_adherent=int(defunt_est_adherent),
@@ -100,6 +100,15 @@ def creer():
     )
 
     flash('Depense enregistree avec succes.', 'success')
+
+    # Generer le PDF
+    try:
+        from services.pdf_service import PdfService
+        chemin = PdfService.generer_pdf_depense(depense)
+        flash(f'PDF depense genere : {chemin}', 'info')
+    except Exception as e:
+        flash(f'PDF non genere : {e}', 'warning')
+
     return redirect(url_for('depenses.index'))
 
 

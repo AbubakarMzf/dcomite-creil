@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Impayes - {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('contributions.index') }}" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <h2 class="d-inline-block mb-0">Adherents avec cotisations impayees</h2>
+    </div>
+    <form method="POST" action="{{ url_for('contributions.impayes_pdf') }}">
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+        </button>
+    </form>
+</div>
+
+<!-- Statistiques -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h5 class="card-title text-danger">Adherents concernes</h5>
+                <p class="display-6 fw-bold text-danger">{{ lignes|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title text-warning">Total appels impayes</h5>
+                <p class="display-6 fw-bold text-warning">{{ lignes|sum(attribute='nb_impayees') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title">Montant total restant</h5>
+                <p class="display-6 fw-bold">{{ total|format_montant }} {{ CURRENCY_SYMBOL }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des impayes -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Detail par adherent</strong>
+        <span class="text-muted">{{ lignes|length }} adherent(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Prenom</th>
+                    <th class="text-center">Nb appels impayes</th>
+                    <th class="text-end">Montant restant ({{ CURRENCY_SYMBOL }})</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ligne in lignes %}
+                <tr>
+                    <td>{{ ligne.id }}</td>
+                    <td>{{ ligne.nom }}</td>
+                    <td>{{ ligne.prenom }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-warning text-dark">{{ ligne.nb_impayees }}</span>
+                    </td>
+                    <td class="text-end fw-bold text-danger">{{ ligne.montant_restant|format_montant }} {{ CURRENCY_SYMBOL }}</td>
+                    <td class="text-center">
+                        <button class="btn btn-success btn-sm"
+                                onclick="loadModal('{{ url_for('contributions.form_nouveau') }}')">
+                            <i class="bi bi-cash"></i> Payer
+                        </button>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-success py-4">
+                        <i class="bi bi-check-circle fs-4 d-block mb-1"></i>
+                        Aucun impaye ! Tous les adherents sont a jour.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            {% if lignes %}
+            <tfoot class="table-secondary">
+                <tr>
+                    <td colspan="3" class="fw-bold">TOTAL</td>
+                    <td class="text-center fw-bold">{{ lignes|sum(attribute='nb_impayees') }}</td>
+                    <td class="text-end fw-bold text-danger">{{ total|format_montant }} {{ CURRENCY_SYMBOL }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

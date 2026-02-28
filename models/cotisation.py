@@ -83,14 +83,15 @@ class Cotisation:
         """
         Enregistre un paiement pour cette cotisation.
         Met a jour montant_paye et statut, cree une contribution, log dans historique.
+        Retourne la Contribution creee.
         """
         from models.contribution import Contribution
         from models.historique import Historique
 
         db = DatabaseManager()
 
-        # Creer la contribution
-        Contribution.create(
+        # Creer la contribution et la recuperer
+        contribution = Contribution.create(
             adherent_id=self.adherent_id,
             cotisation_id=self.id,
             montant=montant,
@@ -121,9 +122,11 @@ class Cotisation:
         # Logger dans historique
         Historique.log(
             self.adherent_id, 'paiement_cotisation',
-            f"Paiement de {montant} EUR (cotisation appel #{self.appel_id})",
+            f"Paiement de {montant} pour appel de fonds #{self.appel_id}",
             montant=montant, admin_id=admin_id
         )
+
+        return contribution
 
     def get_reste_a_payer(self):
         """Montant restant a payer"""

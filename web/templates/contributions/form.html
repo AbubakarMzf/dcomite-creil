@@ -5,7 +5,8 @@
     </div>
     <div class="modal-body">
         <div class="row g-3">
-            <!-- Choix adherent -->
+
+            <!-- Adherent -->
             <div class="col-12">
                 <label class="form-label">Adherent <span class="text-danger">*</span></label>
                 <select name="adherent_id" id="selectAdherent" class="form-select" required>
@@ -16,23 +17,39 @@
                 </select>
             </div>
 
-            <!-- Zone cotisations (chargee en AJAX) -->
-            <div class="col-12" id="zoneCotisations" style="display:none;">
-                <label class="form-label">Cotisation a payer</label>
-                <select name="cotisation_id" id="selectCotisation" class="form-select">
-                    <option value="">-- Paiement libre (sans cotisation) --</option>
+            <!-- Motif (affiche apres selection de l'adherent) -->
+            <div class="col-12" id="zoneMotif" style="display:none;">
+                <label class="form-label">Motif <span class="text-danger">*</span></label>
+                <select id="selectMotif" class="form-select">
+                    <option value="cotisation">Cotisation</option>
                 </select>
+                <!-- Champs caches transmis au serveur -->
                 <input type="hidden" name="type_paiement" id="typePaiement" value="cotisation">
+                <input type="hidden" name="cotisation_id" id="cotisationId" value="">
             </div>
 
+            <!-- Appel de fonds (affiche seulement quand motif = Cotisation) -->
+            <div class="col-12" id="zoneCotisations" style="display:none;">
+                <label class="form-label">Appel de fonds</label>
+                <select id="selectCotisation" class="form-select">
+                    <option value="">-- Paiement libre (aucun appel specifique) --</option>
+                </select>
+            </div>
+
+            <!-- Montant -->
             <div class="col-md-6">
                 <label class="form-label">Montant ({{ CURRENCY_SYMBOL }}) <span class="text-danger">*</span></label>
-                <input type="number" name="montant" id="inputMontant" class="form-control" step="0.01" min="0.01" required>
+                <input type="number" name="montant" id="inputMontant"
+                       class="form-control" step="0.01" min="0.01" required>
             </div>
+
+            <!-- Date -->
             <div class="col-md-6">
                 <label class="form-label">Date de paiement <span class="text-danger">*</span></label>
                 <input type="date" name="date_paiement" class="form-control" required>
             </div>
+
+            <!-- Mode -->
             <div class="col-md-6">
                 <label class="form-label">Mode de paiement</label>
                 <select name="mode_paiement" class="form-select">
@@ -42,6 +59,8 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <!-- Admin -->
             <div class="col-md-6">
                 <label class="form-label">Admin</label>
                 <select name="admin_id" class="form-select">
@@ -51,14 +70,20 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <!-- Reference -->
             <div class="col-12">
                 <label class="form-label">Reference</label>
-                <input type="text" name="reference_paiement" class="form-control">
+                <input type="text" name="reference_paiement" class="form-control"
+                       placeholder="N° cheque, transaction...">
             </div>
+
+            <!-- Notes -->
             <div class="col-12">
                 <label class="form-label">Notes</label>
                 <textarea name="notes" class="form-control" rows="2"></textarea>
             </div>
+
         </div>
     </div>
     <div class="modal-footer">
@@ -70,56 +95,95 @@
 </form>
 
 <script>
-document.getElementById('selectAdherent').addEventListener('change', function() {
-    var adherentId = this.value;
-    var zone = document.getElementById('zoneCotisations');
-    var select = document.getElementById('selectCotisation');
-    var typePaiement = document.getElementById('typePaiement');
-    var inputMontant = document.getElementById('inputMontant');
+(function () {
+    var API_URL = '{{ url_for("contributions.api_cotisations", adherent_id=9999) }}';
 
-    if (!adherentId) {
-        zone.style.display = 'none';
-        return;
-    }
+    var elAdherent    = document.getElementById('selectAdherent');
+    var elMotif       = document.getElementById('selectMotif');
+    var elCotisation  = document.getElementById('selectCotisation');
+    var elTypePaie    = document.getElementById('typePaiement');
+    var elCotId       = document.getElementById('cotisationId');
+    var elMontant     = document.getElementById('inputMontant');
+    var zoneMotif     = document.getElementById('zoneMotif');
+    var zoneCot       = document.getElementById('zoneCotisations');
 
-    fetch('{{ url_for("contributions.index") }}api/cotisations/' + adherentId)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            select.innerHTML = '<option value="">-- Paiement libre (sans cotisation) --</option>';
+    // --- Quand on change d'adherent ---
+    elAdherent.addEventListener('change', function () {
+        var id = this.value;
+        zoneMotif.style.display = 'none';
+        zoneCot.style.display   = 'none';
+        if (!id) return;
 
-            if (data.frais_impaye) {
-                var opt = document.createElement('option');
-                opt.value = 'frais_entree';
-                opt.textContent = 'Frais d\'entree - ' + data.frais_montant + ' {{ CURRENCY_SYMBOL }}';
-                opt.dataset.montant = data.frais_montant;
-                select.appendChild(opt);
-            }
+        fetch(API_URL.replace('9999', id))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                // Construire la liste motif
+                elMotif.innerHTML = '';
 
-            data.cotisations.forEach(function(c) {
-                var opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.appel_info + ' - Reste: ' + c.reste + ' {{ CURRENCY_SYMBOL }}';
-                opt.dataset.montant = c.reste;
-                select.appendChild(opt);
+                var optCot = document.createElement('option');
+                optCot.value = 'cotisation';
+                optCot.textContent = 'Cotisation';
+                elMotif.appendChild(optCot);
+
+                if (data.frais_impaye) {
+                    var optF = document.createElement('option');
+                    optF.value = 'frais_entree';
+                    optF.dataset.montant = data.frais_montant;
+                    optF.textContent = "Frais d'entree (" + data.frais_montant + ' {{ CURRENCY_SYMBOL }})';
+                    elMotif.appendChild(optF);
+                }
+
+                // Construire la liste des appels
+                elCotisation.innerHTML = '<option value="">-- Paiement libre --</option>';
+                data.cotisations.forEach(function (c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.dataset.montant = c.reste;
+                    opt.textContent = c.appel_info + ' — Reste : ' + c.reste + ' {{ CURRENCY_SYMBOL }}';
+                    elCotisation.appendChild(opt);
+                });
+
+                zoneMotif.style.display = 'block';
+                syncZoneCotisations();
+                syncHiddenFields();
             });
+    });
 
-            zone.style.display = (data.cotisations.length > 0 || data.frais_impaye) ? 'block' : 'none';
-        });
-});
+    // --- Quand on change de motif ---
+    elMotif.addEventListener('change', function () {
+        syncZoneCotisations();
+        syncHiddenFields();
+    });
 
-document.getElementById('selectCotisation').addEventListener('change', function() {
-    var typePaiement = document.getElementById('typePaiement');
-    var inputMontant = document.getElementById('inputMontant');
-    var selected = this.options[this.selectedIndex];
+    // --- Quand on change d'appel de fonds ---
+    elCotisation.addEventListener('change', function () {
+        syncHiddenFields();
+    });
 
-    if (this.value === 'frais_entree') {
-        typePaiement.value = 'frais_entree';
-    } else {
-        typePaiement.value = 'cotisation';
+    function syncZoneCotisations() {
+        var motif = elMotif.value;
+        zoneCot.style.display = (motif === 'cotisation') ? 'block' : 'none';
     }
 
-    if (selected && selected.dataset.montant) {
-        inputMontant.value = selected.dataset.montant;
+    function syncHiddenFields() {
+        var motif = elMotif.value;
+        elTypePaie.value = motif;
+
+        if (motif === 'frais_entree') {
+            elCotId.value = '';
+            var selOpt = elMotif.options[elMotif.selectedIndex];
+            if (selOpt && selOpt.dataset.montant) {
+                elMontant.value = selOpt.dataset.montant;
+            }
+        } else {
+            elCotId.value = elCotisation.value;
+            var cotOpt = elCotisation.options[elCotisation.selectedIndex];
+            if (cotOpt && cotOpt.dataset.montant) {
+                elMontant.value = cotOpt.dataset.montant;
+            } else {
+                elMontant.value = '';
+            }
+        }
     }
-});
+}());
 </script>

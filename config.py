@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_PATH = os.path.join(BASE_DIR, 'data', 'tontine.db')
 BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
 EXPORTS_DIR = os.path.join(BASE_DIR, 'exports')
-PDF_OUTPUT_DIR = os.path.join(os.path.expanduser('~'), 'Desktop', 'dcomitee')
+PDF_OUTPUT_DIR = os.path.join(os.path.expanduser('~'), 'Desktop', 'dcomite_history')
 
 # Application
 APP_NAME = "Death Comitee"
